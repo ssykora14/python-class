@@ -3,19 +3,18 @@
 Author: Sally S.
 Program Name: eShelf.py
 Description: A GUI eShelf program. The program can add books to a csv, remove books, and
-reccommend a random book or by genre.
+recommend a random book or randomly by genre.
 
 """
-
+# import required modules
 from breezypythongui import EasyFrame
-##import tkinter as tk
 from tkinter import ttk
 import pandas
 import random
 import csv
 
 class eShelf(EasyFrame):
- 
+    # Initialize the GUI window
     def __init__(self):
         EasyFrame.__init__(self, "Sally's eShelf Project")
         dataPanel = self.addPanel(row = 0, column = 0,
@@ -32,6 +31,7 @@ class eShelf(EasyFrame):
                            background = "gray")
 
         # Initialize genre drop down menu
+        # New genres can be added here
         self.genrechoosen = ttk.Combobox(dataPanel, width = 30, state="readonly")
         self.genrechoosen['values'] = ('Choose a genre:',
                                        'Anthology',
@@ -50,7 +50,6 @@ class eShelf(EasyFrame):
         self.genrechoosen.grid(row = 2, column = 1)
         self.genrechoosen.current(0)
         
-
         # Create the nested frame for the button panel
         buttonPanel = self.addPanel(row = 1, column = 0,
                                     background = "black")
@@ -59,20 +58,23 @@ class eShelf(EasyFrame):
         buttonPanel.addButton(text = "Give Me a Recommendation", row = 0, column = 2, command = self.get_random)
         buttonPanel.addButton(text = "Help", row = 0, column = 4, command = self.help)
 
+    # Create the button action to add a book to the bookshelf.csv file
     def add_book(self):
+        # Get inputs
         title = self.title.getText()
         author = self.author.getText()
         genre = self.genrechoosen.get()
 
-        # field names
         book = {
             "Title": title,
             "Author": author,
             "Genre": genre
             }
 
-        if title == "Add Title" or genre == "Choose a genre:":
-            text = self.messageBox(title = "Error", message = "You must enter a title and choose a genre to add a book." )
+        # Valiate inputs
+        if (title == "Add Title") or (genre == "Choose a genre:"):
+            self.messageBox(title = "Error",
+                                   message = "You must enter a title and choose a genre to add a book." )
 
         else:
             # writing to csv file
@@ -81,45 +83,60 @@ class eShelf(EasyFrame):
                     addbook = csv.writer(bookshelf)
                     addbook.writerow(book.values())
 
-                text = self.messageBox(title = "Book Added", message = "Your book has been added.")
+                # This can be commented out ifyou have many titles to add.
+                self.messageBox(title = "Book Added",
+                                       message = "Your book has been added.")
             except:
-                text = self.messageBox(title = "Error", message = "You must have a csv named 'bookshelf.csv' in the data folder." )
+                self.messageBox(title = "Error",
+                                       message = "You must have a csv named 'bookshelf.csv' in the data folder." )
 
     def remove_book(self):
-        
+        """
+Create the button action to remove a book from the bookshelf.csv file.
+"""
+        # Get title input
         removedBook = self.title.getText()
+        # Valiate inputs
         if removedBook == "Add Title":
-            text = self.messageBox(title = "Error", message = "You must enter a title to remove a book." )
+            text = self.messageBox(title = "Error",
+                                   message = "You must enter a title to remove a book." )
         else:
+            # Remove entry and rewrite updated csv file
             try:
                 bookshelf = pandas.read_csv('data/bookshelf.csv')
                 removeRow = bookshelf[bookshelf['Title'] == removedBook].index.values
                 if len(removeRow) == 0:
-                    text = self.messageBox(title = "Error", message = "That title wasn't found on the list." )
+                    self.messageBox(title = "Error",
+                                           message = "That title wasn't found on the list." )
                 else:
                     bookshelf = bookshelf.drop(removeRow)
                     bookshelf.to_csv('data/bookshelf.csv', index = False, sep=',')
-                    text = self.messageBox(title = "Book Removed", message = "Your book has been removed." )
+                    self.messageBox(title = "Book Removed",
+                                           message = "Your book has been removed." )
             except:
-                text = self.messageBox(title = "Error", message = "You must have a csv named 'bookshelf.csv' in the data folder." )
+                self.messageBox(title = "Error",
+                                       message = "You must have a csv named 'bookshelf.csv' in the data folder." )
 
     def get_random(self):
+        """Create the button action to generate a random book from the bookshelf.csv file"""
         try:
             bookshelf = pandas.read_csv('data/bookshelf.csv')
             index = bookshelf.index
             genre = self.genrechoosen.get()
             genreList = bookshelf['Genre'].to_list()
+            # Check if user has chosen a genre
             if genre == "Choose a genre:":
                 total_rows = len(index)
                 random_choice = random.randint(0, total_rows - 1)
                 shelfRec = "You should read " + bookshelf.iloc[random_choice, 0] \
                       + " by " + bookshelf.iloc[random_choice, 1] + "."
-                text = self.messageBox(title = "Your Recommendation", message = shelfRec )
+                self.messageBox(title = "Your Recommendation", message = shelfRec )
+
+            # Verify genre in shelf list
             elif any(bookGenre == genre for bookGenre in genreList):
                 total_rows = len(index)
                 random_choice = random.randint(0, total_rows - 1)
                 genreMatch = False
-                print(bookshelf.iloc[random_choice, 2])
                 while genreMatch == False:
                     if bookshelf.iloc[random_choice, 2] == genre:
                         genreMatch = True
@@ -127,13 +144,17 @@ class eShelf(EasyFrame):
                         random_choice = random.randint(0, total_rows - 1)
                 shelfRec = "You should read " + bookshelf.iloc[random_choice, 0] \
                       + " by " + bookshelf.iloc[random_choice, 1] + "."
-                text = self.messageBox(title = "Your Recommendation", message = shelfRec )
+                self.messageBox(title = "Your Recommendation", message = shelfRec )
             else:
-                text = self.messageBox(title = "Error", message = "There are no books of that genre on the shelf.")
+                self.messageBox(title = "Error",
+                                       message = "There are no books of that genre on the shelf.")
         except:
-                text = self.messageBox(title = "Error", message = "You must have a csv named 'bookshelf.csv' in the data folder." )
-
+                text = self.messageBox(title = "Error",
+                                       message = "You must have a csv named 'bookshelf.csv' in the data folder." )
+                
     def help(self):
+        """Create the button action to generate a new window with program instructions"""
+        
         HELP_MESSAGE = """
 Thank you for using my eShelf Program!
 
@@ -150,7 +171,7 @@ genre on the shelf, one will be selected. If there are none of that genre, a pop
 generated to inform the user.
 
 """
-        text = self.messageBox(title = "Help", message = HELP_MESSAGE, width = 50, height = 25 )
+        self.messageBox(title = "Help", message = HELP_MESSAGE, width = 50, height = 25 )
 
 def main():
     """Instantiate and pop up the window."""
